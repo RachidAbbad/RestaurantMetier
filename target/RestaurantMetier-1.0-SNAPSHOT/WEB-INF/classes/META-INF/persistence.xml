@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
+    <persistence-unit name="AppRestaurant" transaction-type="JTA">
+        <jta-data-source>java:/apprestaurant</jta-data-source>
+        <class>com.sigl.entities.Client</class>
+        <class>com.sigl.entities.Commande</class>
+        <class>com.sigl.entities.Menu</class>
+        <class>com.sigl.entities.CommandeKey</class>
+        <class>com.sigl.entities.LigneCommande</class>
+        <class>com.sigl.entities.Categorie</class>
+    </persistence-unit>
+</persistence>
