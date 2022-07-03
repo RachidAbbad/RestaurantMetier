@@ -1,16 +1,22 @@
 package com.sigl.session;
 
-import com.sigl.entities.Categorie;
-import com.sigl.entities.Commande;
-import com.sigl.entities.LigneCommande;
-import com.sigl.entities.Menu;
+import com.sigl.entities.*;
+import org.apache.commons.io.IOUtils;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+import org.jboss.resteasy.annotations.providers.multipart.PartType;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import javax.ejb.EJB;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationPath("/api")
 public class RestauratManager extends Application {
@@ -76,8 +82,7 @@ public class RestauratManager extends Application {
         @DELETE
         @Produces(MediaType.APPLICATION_JSON)
         @Path("/{id}")
-        @Consumes("application/json")
-        public String editMenu(@PathParam("id") long id) {
+        public String deleteMenu(@PathParam("id") long id) {
             try{
                 metier.deleteMenu(id);
                 return "{'status' : true , 'message' : 'Le menu a été supprimé avec succè'}";
@@ -159,7 +164,115 @@ public class RestauratManager extends Application {
             return metier.getLignesCommande(id);
         }
 
+        @DELETE
+        @Produces(MediaType.APPLICATION_JSON)
+        @Path("/{idCmd}")
+        public void deleteCommande(@PathParam("idCmd") long id) {
+            metier.deleteCommande(id);
+        }
 
     }
+
+
+    @Path("/login")
+    public static class Auth{
+        public Auth(){}
+
+        @POST
+        @Path("")
+        @Produces(MediaType.APPLICATION_JSON)
+        @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+        public Client login(@FormParam("email") String email,
+                                  @FormParam("password") String password) {
+            System.out.println(email + " " + password);
+            return metier.login(email, password);
+        }
+    }
+
+    @Path("/files")
+    public static class Files {
+
+        private static final String SERVER_UPLOAD_LOCATION_FOLDER = "C://Users/BIG CHOIX/Desktop/git/RestaurantWeb/target/RestaurantWeb-1.0-SNAPSHOT/Images/";
+
+        public Files(){}
+
+        @POST
+        @Path("/upload")
+        @Consumes("multipart/form-data")
+        public Response uploadFile(MultipartFormDataInput input) {
+
+            String fileName = "";
+
+            Map<String, List<InputPart>> formParts = input.getFormDataMap();
+
+            List<InputPart> inPart = formParts.get("file");
+
+            for (InputPart inputPart : inPart) {
+
+                try {
+
+                    // Retrieve headers, read the Content-Disposition header to obtain the original name of the file
+                    MultivaluedMap<String, String> headers = inputPart.getHeaders();
+                    fileName = parseFileName(headers);
+
+                    // Handle the body of that part with an InputStream
+                    InputStream istream = inputPart.getBody(InputStream.class,null);
+
+                    fileName = SERVER_UPLOAD_LOCATION_FOLDER + fileName;
+
+                    saveFile(istream,fileName);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            String output = "File saved to server location : " + fileName;
+
+            return Response.status(200).entity(output).build();
+        }
+
+        // Parse Content-Disposition header to get the original file name
+        private String parseFileName(MultivaluedMap<String, String> headers) {
+
+            String[] contentDispositionHeader = headers.getFirst("Content-Disposition").split(";");
+
+            for (String name : contentDispositionHeader) {
+
+                if ((name.trim().startsWith("filename"))) {
+
+                    String[] tmp = name.split("=");
+
+                    String fileName = tmp[1].trim().replaceAll("\"","");
+
+                    return fileName;
+                }
+            }
+            return "randomName";
+        }
+
+        // save uploaded file to a defined location on the server
+        private void saveFile(InputStream uploadedInputStream,
+                              String serverLocation) {
+
+            try {
+                OutputStream outpuStream = new FileOutputStream(new File(serverLocation));
+                int read = 0;
+                byte[] bytes = new byte[1024];
+
+                outpuStream = new FileOutputStream(new File(serverLocation));
+                while ((read = uploadedInputStream.read(bytes)) != -1) {
+                    outpuStream.write(bytes, 0, read);
+                }
+                outpuStream.flush();
+                outpuStream.close();
+            } catch (IOException e) {
+
+                e.printStackTrace();
+            }
+        }
+    }
+
 
 }

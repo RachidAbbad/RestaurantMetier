@@ -32,6 +32,7 @@ public class Commande implements Serializable {
 
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name="id_client",referencedColumnName = "id")
+	@JsonBackReference
 	private Client client;
 	@OneToMany(fetch = FetchType.EAGER,mappedBy = "commande")
 	private List<LigneCommande> commandes=new ArrayList<LigneCommande>();

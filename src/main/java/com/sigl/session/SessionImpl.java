@@ -16,7 +16,7 @@ import com.sigl.entities.*;
 @Stateless
 @LocalBean
 @ApplicationPath("/")
-public class SessionImpl implements SessionImplRemote, SessionImplLocal {
+public class SessionImpl implements SessionImplLocal, SessionImplRemote {
 	@PersistenceContext(unitName = "AppRestaurant")
 	EntityManager em;
     public SessionImpl() {
@@ -71,13 +71,14 @@ public class SessionImpl implements SessionImplRemote, SessionImplLocal {
 		em.persist(c);
 		for (LigneCommande l : c.getCommandes()) {
 			l.setMenu(getMenu(l.getMenu().getId()));
+			System.out.println(l.getMenu().getTitre());
 			l.setCommande(c);
 			CommandeKey key = new CommandeKey();
 			key.setIdcommande(c.getId());
 			key.setIdmenu(l.getMenu().getId());
+			System.out.println("HHHHH"+ c.getId()+l.getMenu().getId());
 			l.setIdkey(key);
-			/*l.getIdkey().setId_menu(l.getMenu().getId());
-			l.getIdkey().setId_commande(c.getId());*/
+			em.persist(l);
 		}
 		em.merge(c);
 	}
@@ -93,6 +94,23 @@ public class SessionImpl implements SessionImplRemote, SessionImplLocal {
 	}
 
 	@Override
+	public Client login(String userName, String password) {
+		Query req = em.createQuery("select c from Client c where c.password = :password and c.email = :email");
+		req.setParameter("password",password);
+		req.setParameter("email",userName);
+		List<Client> client = req.getResultList();
+		if(client.size()==0)
+			return null;
+		return client.get(0);
+	}
+
+	@Override
+	public void deleteCommande(Long id) {
+		Commande cmd = em.find(Commande.class, id);
+		em.remove(cmd);
+	}
+
+	@Override
 	public Menu getMenu(Long id) {
 		return em.find(Menu.class, id);
 	}
@@ -105,7 +123,8 @@ public class SessionImpl implements SessionImplRemote, SessionImplLocal {
 	@Override
 	public void deleteMenu(Long id) {
 		Menu menu=em.find(Menu.class, id);
-		em.remove(menu);
+
+		em.remove(em.merge(menu));
 	}
 
 	@Override
@@ -130,6 +149,7 @@ public class SessionImpl implements SessionImplRemote, SessionImplLocal {
 		menu.setTitre(m.getTitre());
 		menu.setDescription(m.getDescription());
 		menu.setPrix(m.getPrix());
+		menu.setImage(m.getImage());
 		menu.setCategorie(getCategorie(m.getCategorie().getId()));
 		em.merge(menu);
 		return menu;

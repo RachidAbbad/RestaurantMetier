@@ -34,4 +34,8 @@ public interface SessionImplLocal {
 	Commande getLignesCommande(long id);
 
 	Client getClientById(long id);
+
+	Client login(String userName, String password);
+
+	void deleteCommande(Long id);
 }

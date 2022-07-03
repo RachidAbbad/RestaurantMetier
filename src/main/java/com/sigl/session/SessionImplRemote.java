@@ -1,11 +1,10 @@
 package com.sigl.session;
 
-import java.util.List;
-
-import javax.ejb.Remote;
-
 import com.sigl.entities.Categorie;
 import com.sigl.entities.Menu;
+
+import javax.ejb.Remote;
+import java.util.List;
 
 @Remote
 public interface SessionImplRemote {
